@@ -16,6 +16,7 @@ import {
   togglePlayback,
   type Transport,
 } from "./playback.ts";
+import { MoveHandle, usePlayerPosition } from "./player-position.tsx";
 import { mountVoicePreview } from "./voice-preview.ts";
 
 async function threadMessages(sdk: ReturnType<typeof useSdk>, threadId: string, signal: AbortSignal) {
@@ -207,6 +208,7 @@ function ThreadPlayer({ threadId }: { threadId: string }) {
 function Player({ floating = false }: { floating?: boolean }) {
   const player = useSyncExternalStore(subscribe, snapshot);
   const speed = useSyncExternalStore(subscribe, playbackSpeed);
+  const position = usePlayerPosition();
 
   if (!player || player.label === previewLabel) {
     return null;
@@ -214,14 +216,24 @@ function Player({ floating = false }: { floating?: boolean }) {
 
   const panel = floating ? "thread-reader-panel thread-reader-floating" : "thread-reader-panel thread-reader-docked";
 
+  const moved = floating && position;
+  const style = moved
+    ? {
+        transform: `translate(clamp(0px, ${moved.x}px, 100dvw - 100%), clamp(0px, ${moved.y}px, 100dvh - 100%))`,
+      }
+    : undefined;
+  const panelProps = { className: panel, "data-moved": moved ? true : undefined, style, "aria-label": "Thread Reader" };
+
   if (player.status === "Error") {
     return (
-      <aside aria-label="Thread Reader" className={panel}>
+      <aside {...panelProps}>
         <div className="flex items-center gap-3 text-sm">
-          <div role="status" className="max-w-64">
-            <strong>Couldn’t read aloud</strong>
-            <div className="text-xs">{player.detail}</div>
-          </div>
+          <MoveHandle placed={position !== null}>
+            <div role="status" className="min-w-0 break-words">
+              <strong>Couldn’t read aloud</strong>
+              <div className="text-xs">{player.detail}</div>
+            </div>
+          </MoveHandle>
           <button
             type="button"
             onClick={stop}
@@ -243,7 +255,7 @@ function Player({ floating = false }: { floating?: boolean }) {
   }
 
   return (
-    <aside aria-label="Thread Reader" className={panel}>
+    <aside {...panelProps}>
       <div className="flex items-center gap-1">
         <button
           type="button"
@@ -267,20 +279,22 @@ function Player({ floating = false }: { floating?: boolean }) {
             )}
           </svg>
         </button>
-        <span role="status" className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-[13px]">
-          <span className="font-medium">{player.label}</span>
-          {loading ? (
-            <>
-              <span className="thread-reader-spinner" aria-hidden="true" />
-              <span className="sr-only">Loading</span>
-            </>
-          ) : (
-            <span className="truncate text-[12px] text-muted-foreground">
-              <span aria-hidden="true">· </span>
-              {player.status}
-            </span>
-          )}
-        </span>
+        <MoveHandle placed={position !== null}>
+          <span role="status" className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-[13px]">
+            <span className="font-medium">{player.label}</span>
+            {loading ? (
+              <>
+                <span className="thread-reader-spinner" aria-hidden="true" />
+                <span className="sr-only">Loading</span>
+              </>
+            ) : (
+              <span className="truncate text-[12px] text-muted-foreground">
+                <span aria-hidden="true">· </span>
+                {player.status}
+              </span>
+            )}
+          </span>
+        </MoveHandle>
         <select
           aria-label="Playback speed"
           title="Playback speed"

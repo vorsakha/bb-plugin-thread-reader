@@ -2,14 +2,14 @@
 
 Listen to a BB thread, a single message, or text you select. The player lets you pause, skip to another passage, and change the speed from 0.75× to 2×.
 
-![Thread Reader playing a conversation at 1.25× speed](./screenshots/thread-reader/player.png)
+![Thread Reader paused beside the conversation after dragging the player over the sidebar](./screenshots/thread-reader/player.png)
 
 ## Install
 
 You need BB 0.50 or later and an OpenAI API key with Realtime access.
 
 ```sh
-bb plugin install git:https://github.com/vorsakha/bb-plugin-thread-reader.git@v0.1.2
+bb plugin install git:https://github.com/vorsakha/bb-plugin-thread-reader.git@v0.1.3
 ```
 
 Open **Settings → Installed plugins → Thread Reader** and enter your API key. Click the speaker beside **Voice** to hear a sample. The defaults are `gpt-realtime-2.1-mini` and the `marin` voice. To change the delivery, edit **Narration style** and preview it again.
@@ -21,6 +21,8 @@ Open **Settings → Installed plugins → Thread Reader** and enter your API key
 - **Whole thread.** Open the thread menu and choose **Read thread aloud** to hear your messages and the assistant's replies in order.
 
 ![Read aloud speaker button beneath an assistant reply](./screenshots/thread-reader/message-action.png)
+
+Drag the player by its dotted title area to place it anywhere in the BB window. Click the title to center the docked player or return a moved player to its dock. With the title focused, use the arrow keys to move it or Home to dock it.
 
 To dismiss the player after the last passage, turn on **Close player when narration finishes** in Thread Reader settings. By default, the player stays open for replay.
 

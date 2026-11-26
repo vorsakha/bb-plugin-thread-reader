@@ -11,7 +11,8 @@
   box-shadow: var(--shadow-sm);
 }
 
-body:has(.thread-reader-docked:not([inert] *)) .thread-reader-floating,
+body:has(.thread-reader-docked:not([inert] *)) .thread-reader-floating:not([data-moved]),
+body:has(.thread-reader-floating[data-moved]) .thread-reader-docked,
 [inert] .thread-reader-docked {
   display: none;
 }
@@ -22,6 +23,40 @@ body:has(.thread-reader-docked:not([inert] *)) .thread-reader-floating,
   top: 3.5rem;
   right: 1rem;
   margin: 0;
+}
+
+.thread-reader-floating[data-moved] {
+  inset: 0 auto auto 0;
+}
+
+.thread-reader-title {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+}
+
+.thread-reader-grip {
+  flex: none;
+  width: 8px;
+  height: 12px;
+  background: radial-gradient(circle, var(--muted-foreground) 1px, transparent 1.2px) 0 0 / 4px 4px;
+}
+
+button.thread-reader-handle {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+button.thread-reader-handle:active {
+  cursor: grabbing;
 }
 
 .thread-reader-control {
@@ -142,6 +177,11 @@ body:has(.thread-reader-docked:not([inert] *)) .thread-reader-floating,
 }
 
 @media (forced-colors: active) {
+  .thread-reader-grip {
+    forced-color-adjust: none;
+    --muted-foreground: ButtonText;
+  }
+
   .thread-reader-spinner {
     forced-color-adjust: none;
     border-color: Canvas;
