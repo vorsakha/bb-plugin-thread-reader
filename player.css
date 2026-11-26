@@ -1,0 +1,45 @@
+.thread-reader-timeline {
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: calc(100% - 10px) 4px;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.thread-reader-timeline:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.thread-reader-timeline::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.thread-reader-timeline::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+@media (forced-colors: active) {
+  .thread-reader-timeline {
+    appearance: auto;
+    accent-color: auto;
+  }
+  .thread-reader-timeline::-webkit-slider-thumb {
+    appearance: auto;
+  }
+}

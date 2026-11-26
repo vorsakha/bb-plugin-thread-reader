@@ -26,15 +26,23 @@
   },
   "devDependencies": {
     "@get-bb/plugin-sdk": "0.6.157",
+    "@stylistic/eslint-plugin": "^6.0.1",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/ws": "^8",
+    "@typescript-eslint/parser": "^8.74.0",
+    "eslint": "^10.15.0",
+    "prettier": "~3.10.1",
     "typescript": "^5.7"
   },
   "private": true,
   "scripts": {
     "build": "bb plugin build",
     "check": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.ts"
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "format": "prettier --write --ignore-path .gitignore \"**/*.{css,js,ts,tsx}\"",
+    "format:check": "prettier --check --ignore-path .gitignore \"**/*.{css,js,ts,tsx}\"",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "npm run lint -- --fix"
   }
 }

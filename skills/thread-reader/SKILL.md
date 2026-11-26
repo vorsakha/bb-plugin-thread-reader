@@ -8,6 +8,7 @@ the secret field. Set the Realtime model, voice, and narration style there.
 The next passage uses the saved settings. Never request the key in chat.
 
 Use Read aloud on a message or selection, or Read thread aloud in the thread
-menu for the conversation in chronological order. Stop ends playback. The
-plugin sends the passage being narrated and at most one upcoming passage to
-OpenAI. Realtime API billing applies.
+menu for the conversation in chronological order. Pause holds your place and Play
+resumes it. A finished read stays available for replay. Seek with the timeline,
+change the playback speed, or use Stop to close the player. The plugin sends the passage being narrated and at most one
+upcoming passage to OpenAI. Realtime API billing applies.
