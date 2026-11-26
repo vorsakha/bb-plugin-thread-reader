@@ -21,6 +21,13 @@
       "skills"
     ]
   },
+  "bbMarketplace": {
+    "category": "thread-content",
+    "screenshots": [
+      "./screenshots/thread-reader/player.png",
+      "./screenshots/thread-reader/message-action.png"
+    ]
+  },
   "dependencies": {
     "ws": "^8.18.3"
   },
