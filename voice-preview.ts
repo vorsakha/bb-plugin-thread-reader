@@ -15,7 +15,7 @@ export function mountVoicePreview() {
   icon.setAttribute("aria-hidden", "true");
   icon.setAttribute("fill", "none");
   icon.setAttribute("stroke", "currentColor");
-  icon.setAttribute("stroke-width", "1.8");
+  icon.setAttribute("stroke-width", "1.5");
   icon.setAttribute("stroke-linecap", "round");
   icon.setAttribute("stroke-linejoin", "round");
   const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -38,10 +38,8 @@ export function mountVoicePreview() {
     button.title = label;
     button.setAttribute("aria-label", label);
     button.disabled = !voice;
-    path.setAttribute(
-      "d",
-      playing ? "M6 6h12v12H6z" : "M11 5 5 9H2v6h3l6 4z M15 8a6 6 0 0 1 0 8 M18 5a10 10 0 0 1 0 14",
-    );
+    path.setAttribute("fill", playing ? "currentColor" : "none");
+    path.setAttribute("d", playing ? "M6 6h12v12H6z" : "M3 9h4l5-4v14l-5-4H3zM16 9a5 5 0 0 1 0 6M19 6a9 9 0 0 1 0 12");
     const message = preview?.status === "Error" ? preview.detail : "";
 
     if (feedback.textContent !== message) {

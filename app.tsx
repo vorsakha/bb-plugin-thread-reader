@@ -1,6 +1,6 @@
 import "./player.css";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { definePluginApp, useSettings, type useSdk } from "@get-bb/plugin-sdk/app";
+import { definePluginApp, useBbContext, useSettings, type useSdk } from "@get-bb/plugin-sdk/app";
 import {
   holdForSeek,
   playbackSpeed,
@@ -76,8 +76,17 @@ function Timeline({ player }: { player: Transport }) {
   const time = player.duration ? `${elapsed} / ${clock(player.duration)}` : percent;
   const valueText = single ? time : `${passage}, ${percent}`;
 
+  let widestReadout = `${player.count} / ${player.count}`;
+
+  if (single && player.duration) {
+    const total = clock(player.duration);
+    widestReadout = `${total} / ${total}`;
+  } else if (player.count < 2) {
+    widestReadout = "100%";
+  }
+
   const fill = `${player.count ? (position / player.count) * 100 : 0}%`;
-  const track = `linear-gradient(to right, var(--primary) ${fill}, var(--border) ${fill})`;
+  const track = `linear-gradient(to right, var(--primary) ${fill}, var(--thread-reader-remaining) ${fill})`;
   const section = `${100 / (player.count || 1)}%`;
   const marks = `repeating-linear-gradient(to right, transparent 0 calc(${section} - 2px), var(--popover) calc(${section} - 2px) ${section})`;
 
@@ -88,7 +97,7 @@ function Timeline({ player }: { player: Transport }) {
   }
 
   return (
-    <div className="mt-0.5 grid grid-cols-[minmax(0,1fr)_minmax(5.75rem,max-content)] items-center gap-2 text-[12px] tabular-nums">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-[12px] tabular-nums">
       <input
         type="range"
         aria-label="Narration timeline"
@@ -98,6 +107,7 @@ function Timeline({ player }: { player: Transport }) {
         step={0.01}
         value={position}
         disabled={!player.count}
+        title={player.count ? valueText : undefined}
         className="thread-reader-timeline"
         style={{ backgroundImage: player.count > 1 && player.count <= 12 ? `${marks}, ${track}` : track }}
         onKeyDown={(event) => {
@@ -154,18 +164,22 @@ function Timeline({ player }: { player: Transport }) {
           }
         }}
       />
-      {player.count > 0 && (
-        <span className="whitespace-nowrap text-right text-muted-foreground" title={single ? undefined : passage}>
-          {single ? time : `${index + 1} / ${player.count}`}
+      <span
+        className="grid whitespace-nowrap text-right text-muted-foreground"
+        title={player.count > 1 ? passage : undefined}
+      >
+        <span aria-hidden="true" className="invisible col-start-1 row-start-1">
+          {widestReadout}
         </span>
-      )}
+        {player.count > 0 && (
+          <span className="col-start-1 row-start-1">{single ? time : `${index + 1} / ${player.count}`}</span>
+        )}
+      </span>
     </div>
   );
 }
 
-function Player() {
-  const player = useSyncExternalStore(subscribe, snapshot);
-  const speed = useSyncExternalStore(subscribe, playbackSpeed);
+function Overlay() {
   const closeWhenFinished = useSettings().values?.closeWhenFinished === true;
 
   useEffect(() => {
@@ -181,13 +195,24 @@ function Player() {
     };
   }, []);
 
+  return <Player floating />;
+}
+
+function ThreadPlayer({ threadId }: { threadId: string }) {
+  const active = useBbContext();
+
+  return active.threadId === threadId ? <Player /> : null;
+}
+
+function Player({ floating = false }: { floating?: boolean }) {
+  const player = useSyncExternalStore(subscribe, snapshot);
+  const speed = useSyncExternalStore(subscribe, playbackSpeed);
+
   if (!player || player.label === previewLabel) {
     return null;
   }
 
-  const panel =
-    "fixed top-12 right-4 z-50 box-border max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-popover px-3 py-1.5 text-popover-foreground shadow-lg";
-  const button = "inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md hover:bg-accent";
+  const panel = floating ? "thread-reader-panel thread-reader-floating" : "thread-reader-panel thread-reader-docked";
 
   if (player.status === "Error") {
     return (
@@ -197,7 +222,11 @@ function Player() {
             <strong>Couldn’t read aloud</strong>
             <div className="text-xs">{player.detail}</div>
           </div>
-          <button type="button" onClick={stop} className="rounded-md border border-border px-2 py-1 hover:bg-accent">
+          <button
+            type="button"
+            onClick={stop}
+            className="thread-reader-control rounded-md border border-border px-2 py-1 hover:bg-accent"
+          >
             Dismiss
           </button>
         </div>
@@ -205,30 +234,59 @@ function Player() {
     );
   }
 
-  const action = player.paused ? "Play" : "Pause";
+  const finished = player.status === "Finished";
+  const loading = player.status === "Loading";
+  let action = player.paused ? "Play" : "Pause";
+
+  if (finished) {
+    action = "Replay";
+  }
 
   return (
-    <aside aria-label="Thread Reader" className={panel + " w-[18.5rem]"}>
+    <aside aria-label="Thread Reader" className={panel}>
       <div className="flex items-center gap-1">
-        <button type="button" aria-label={action} title={action} onClick={togglePlayback} className={button}>
+        <button
+          type="button"
+          aria-label={action}
+          title={action}
+          onClick={togglePlayback}
+          className="thread-reader-control thread-reader-primary"
+        >
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d={player.paused ? "M4 2.5v11l9-5.5z" : "M3 2.5h3.5v11H3zM9.5 2.5H13v11H9.5z"} />
+            {finished ? (
+              <path
+                d="M3.5 5.5a5 5 0 1 1-.4 4.3M3.5 2v3.8h3.8"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ) : (
+              <path d={player.paused ? "M4 2.5v11l9-5.5z" : "M3 2.5h3.5v11H3zM9.5 2.5H13v11H9.5z"} />
+            )}
           </svg>
         </button>
-        <button type="button" aria-label="Stop" title="Stop" onClick={stop} className={button}>
-          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <rect x="3.5" y="3.5" width="9" height="9" rx="1" />
-          </svg>
-        </button>
-        <strong role="status" className="min-w-0 flex-1 truncate text-[13px]">
-          {player.status} · {player.label}
-        </strong>
+        <span role="status" className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-[13px]">
+          <span className="font-medium">{player.label}</span>
+          {loading ? (
+            <>
+              <span className="thread-reader-spinner" aria-hidden="true" />
+              <span className="sr-only">Loading</span>
+            </>
+          ) : (
+            <span className="truncate text-[12px] text-muted-foreground">
+              <span aria-hidden="true">· </span>
+              {player.status}
+            </span>
+          )}
+        </span>
         <select
           aria-label="Playback speed"
           title="Playback speed"
           value={speed}
           onChange={(event) => setPlaybackSpeed(Number(event.target.value))}
-          className="h-8 shrink-0 cursor-pointer rounded-md bg-popover px-1 text-[12px] tabular-nums hover:bg-accent"
+          className="thread-reader-control thread-reader-speed h-8 rounded-md bg-popover px-1 text-[12px] tabular-nums hover:bg-accent"
         >
           {speeds.map((value) => (
             <option key={value} value={value}>
@@ -236,6 +294,17 @@ function Player() {
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          aria-label="Stop"
+          title="Stop and close"
+          onClick={stop}
+          className="thread-reader-control thread-reader-stop"
+        >
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="3.5" y="3.5" width="9" height="9" rx="1" />
+          </svg>
+        </button>
       </div>
       <Timeline player={player} />
     </aside>
@@ -282,5 +351,6 @@ export default definePluginApp((app) => {
     }),
   });
 
-  app.slots.experimental_appOverlay({ id: "reader", component: Player });
+  app.slots.experimental_threadHeaderRow({ id: "reader", component: ThreadPlayer });
+  app.slots.experimental_appOverlay({ id: "reader", component: Overlay });
 });

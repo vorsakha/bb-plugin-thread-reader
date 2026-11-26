@@ -1,7 +1,100 @@
+.thread-reader-panel {
+  box-sizing: border-box;
+  width: 18.5rem;
+  max-width: calc(100% - 1.5rem);
+  margin: 6px 16px 6px auto;
+  padding: 5px 10px;
+  color: var(--popover-foreground);
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+body:has(.thread-reader-docked:not([inert] *)) .thread-reader-floating,
+[inert] .thread-reader-docked {
+  display: none;
+}
+
+.thread-reader-floating {
+  position: fixed;
+  z-index: 50;
+  top: 3.5rem;
+  right: 1rem;
+  margin: 0;
+}
+
+.thread-reader-control {
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.thread-reader-primary,
+.thread-reader-stop {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.thread-reader-primary {
+  margin-right: 3px;
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+.thread-reader-stop {
+  color: var(--muted-foreground);
+}
+
+.thread-reader-primary:hover {
+  background: color-mix(in srgb, var(--foreground) 20%, var(--muted));
+}
+
+.thread-reader-speed {
+  text-align: right;
+  field-sizing: content;
+}
+
+.thread-reader-stop:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.thread-reader-control:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.thread-reader-spinner {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border: 1.5px solid var(--border);
+  border-top-color: var(--muted-foreground);
+  border-right-color: var(--muted-foreground);
+  border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .thread-reader-spinner {
+    animation: thread-reader-spin 0.85s linear infinite;
+  }
+}
+
+@keyframes thread-reader-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 .thread-reader-timeline {
+  --thread-reader-remaining: color-mix(in srgb, var(--popover-foreground) 56%, var(--popover));
   appearance: none;
   width: 100%;
-  height: 20px;
+  height: 24px;
+  border-radius: 5px;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -34,10 +127,34 @@
   background: var(--primary);
 }
 
+.thread-reader-timeline:focus-visible {
+  outline: none;
+}
+
+.thread-reader-timeline:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.thread-reader-timeline:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 @media (forced-colors: active) {
+  .thread-reader-spinner {
+    forced-color-adjust: none;
+    border-color: Canvas;
+    border-top-color: CanvasText;
+    border-right-color: CanvasText;
+  }
+
   .thread-reader-timeline {
     appearance: auto;
     accent-color: auto;
+  }
+  .thread-reader-timeline:focus-visible {
+    outline: 2px solid Highlight;
   }
   .thread-reader-timeline::-webkit-slider-thumb {
     appearance: auto;
@@ -78,4 +195,15 @@
 
 .thread-reader-preview-feedback:empty {
   display: none;
+}
+
+@container settings (min-width: 36rem) {
+  [data-settings-anchor="Voice"] div:has(> .thread-reader-preview-button) {
+    width: 16rem;
+  }
+
+  [data-settings-anchor="Voice"] input:has(+ .thread-reader-preview-button) {
+    min-width: 0;
+    width: 100%;
+  }
 }
