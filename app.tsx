@@ -1,11 +1,12 @@
 import "./player.css";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { definePluginApp, type useSdk } from "@get-bb/plugin-sdk/app";
+import { definePluginApp, useSettings, type useSdk } from "@get-bb/plugin-sdk/app";
 import {
   holdForSeek,
   playbackSpeed,
   previewLabel,
   read,
+  setCloseWhenFinished,
   setPlaybackSpeed,
   seek,
   snapshot,
@@ -165,6 +166,11 @@ function Timeline({ player }: { player: Transport }) {
 function Player() {
   const player = useSyncExternalStore(subscribe, snapshot);
   const speed = useSyncExternalStore(subscribe, playbackSpeed);
+  const closeWhenFinished = useSettings().values?.closeWhenFinished === true;
+
+  useEffect(() => {
+    setCloseWhenFinished(closeWhenFinished);
+  }, [closeWhenFinished]);
 
   useEffect(() => {
     window.addEventListener("pagehide", stop);

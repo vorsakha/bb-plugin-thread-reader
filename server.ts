@@ -20,6 +20,11 @@ export default function threadReader(bb: BbPluginApi) {
       label: "Narration style",
       default: "Warm and conversational. Use natural pauses and place emphasis on the main thought.",
     },
+    closeWhenFinished: {
+      type: "boolean",
+      label: "Close player when narration finishes",
+      default: false,
+    },
   });
 
   const lifetime = new AbortController();

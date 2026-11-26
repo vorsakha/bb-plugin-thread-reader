@@ -15,6 +15,11 @@ type ReaderState = Transport | { label: string; status: "Error"; detail: string 
 
 let state: ReaderState | null = null;
 let current: Reading | undefined;
+let closeWhenFinished = false;
+
+export function setCloseWhenFinished(value: boolean) {
+  closeWhenFinished = value;
+}
 
 export const speeds = [0.75, 1, 1.25, 1.5, 1.75, 2];
 const speedKey = "thread-reader.playback-speed";
@@ -411,6 +416,8 @@ class Reading {
 
         if (index + 1 < this.queue.length) {
           void this.open(index + 1, 0);
+        } else if (closeWhenFinished) {
+          stop();
         } else {
           this.paused = true;
           this.fraction = 1;

@@ -9,7 +9,7 @@ Listen to a BB thread, a single message, or text you select. The player lets you
 You need BB 0.50 or later and an OpenAI API key with Realtime access.
 
 ```sh
-bb plugin install git:https://github.com/vorsakha/bb-plugin-thread-reader.git@v0.1.0
+bb plugin install git:https://github.com/vorsakha/bb-plugin-thread-reader.git@v0.1.1
 ```
 
 Open **Settings → Installed plugins → Thread Reader** and enter your API key. Click the speaker beside **Voice** to hear a sample. The defaults are `gpt-realtime-2.1-mini` and the `marin` voice. To change the delivery, edit **Narration style** and preview it again.
@@ -21,6 +21,8 @@ Open **Settings → Installed plugins → Thread Reader** and enter your API key
 - **Whole thread.** Open the thread menu and choose **Read thread aloud** to hear your messages and the assistant's replies in order.
 
 ![Read aloud speaker button beneath an assistant reply](./screenshots/thread-reader/message-action.png)
+
+To dismiss the player after the last passage, turn on **Close player when narration finishes** in Thread Reader settings. By default, the player stays open for replay.
 
 ## Privacy and cost
 
