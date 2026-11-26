@@ -4,7 +4,9 @@ Listen to a BB thread, one message, or a selected passage with an expressive Ope
 
 ## Setup
 
-Install the plugin from this checkout with `bb plugin install .`. In **Settings → Installed plugins → Thread Reader**, enter an OpenAI project API key with Realtime model access. Choose a model, voice, and narration style. The default is `gpt-realtime-2.1-mini` with the `marin` voice.
+Install the plugin from this checkout with `bb plugin install .`. In **Settings → Installed plugins → Thread Reader**, enter an OpenAI project API key with Realtime model access. Enter a Realtime model ID and a built-in voice name. A link at the bottom of the settings opens OpenAI’s Realtime documentation. The default is `gpt-realtime-2.1-mini` with the `marin` voice.
+
+Click the speaker beside **Voice** to hear the entered voice read a short sample at normal speed with your saved model and narration style. Click it again to stop.
 
 ## Playback
 

@@ -43,3 +43,39 @@
     appearance: auto;
   }
 }
+
+[data-settings-anchor="Voice"] div:has(> .thread-reader-preview-button) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.thread-reader-preview-button {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--foreground);
+}
+
+.thread-reader-preview-button:hover {
+  background: var(--state-hover, var(--accent));
+}
+
+.thread-reader-preview-button:focus-visible {
+  outline: 2px solid var(--ring);
+}
+
+.thread-reader-preview-feedback {
+  grid-column: 1 / -1;
+  color: var(--destructive);
+  font-size: 0.75rem;
+}
+
+.thread-reader-preview-feedback:empty {
+  display: none;
+}

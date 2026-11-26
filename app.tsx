@@ -4,6 +4,7 @@ import { definePluginApp, type useSdk } from "@get-bb/plugin-sdk/app";
 import {
   holdForSeek,
   playbackSpeed,
+  previewLabel,
   read,
   setPlaybackSpeed,
   seek,
@@ -14,6 +15,7 @@ import {
   togglePlayback,
   type Transport,
 } from "./playback.ts";
+import { mountVoicePreview } from "./voice-preview.ts";
 
 async function threadMessages(sdk: ReturnType<typeof useSdk>, threadId: string, signal: AbortSignal) {
   const messages = new Map<number, string>();
@@ -173,7 +175,7 @@ function Player() {
     };
   }, []);
 
-  if (!player) {
+  if (!player || player.label === previewLabel) {
     return null;
   }
 
@@ -235,6 +237,22 @@ function Player() {
 }
 
 export default definePluginApp((app) => {
+  app.slots.settingsSection({
+    id: "documentation",
+    component: () => (
+      <a
+        href="https://developers.openai.com/api/docs/guides/realtime-conversations"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs text-muted-foreground underline hover:text-foreground"
+      >
+        OpenAI Realtime documentation
+      </a>
+    ),
+  });
+
+  app.contentScripts.register({ id: "voice-preview", mount: mountVoicePreview });
+
   app.slots.messageAction({
     id: "read-message",
     title: "Read aloud",

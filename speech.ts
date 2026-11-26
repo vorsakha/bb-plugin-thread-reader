@@ -1,3 +1,6 @@
+export const defaultModel = "gpt-realtime-2.1-mini";
+export const defaultVoice = "marin";
+export const sampleText = "The rain has stopped, the windows are open, and the afternoon is ours.";
 export const passageLimit = 800;
 
 export function passages(text: string): string[] {

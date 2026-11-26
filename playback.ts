@@ -1,4 +1,6 @@
-import { passages } from "./speech.ts";
+import { passages, sampleText } from "./speech.ts";
+
+export const previewLabel = "Voice preview";
 
 export type Transport = {
   label: string;
@@ -81,11 +83,11 @@ export function stop() {
   publish(null);
 }
 
-async function getAudio(text: string, signal: AbortSignal) {
+async function getAudio(text: string, signal: AbortSignal, previewVoice?: string) {
   const response = await fetch("/api/v1/plugins/thread-reader/http/read", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify(previewVoice ? { previewVoice } : { text }),
     signal,
   });
 
@@ -142,7 +144,10 @@ class Reading {
   private playAttempt = 0;
   private complete?: () => void;
 
-  constructor(private readonly label: string) {}
+  constructor(
+    private readonly label: string,
+    private readonly previewVoice?: string,
+  ) {}
 
   private get finished() {
     return this.paused && this.index === this.queue.length - 1 && this.fraction === 1;
@@ -208,7 +213,7 @@ class Reading {
   async start(load: (signal: AbortSignal) => Promise<string[]>) {
     const { signal } = this.lifetime;
     this.audio.preservesPitch = true;
-    this.audio.defaultPlaybackRate = speed;
+    this.audio.defaultPlaybackRate = this.previewVoice ? 1 : speed;
     this.update();
 
     try {
@@ -240,7 +245,7 @@ class Reading {
     }
 
     const controller = new AbortController();
-    const audio = getAudio(this.queue[index], controller.signal).catch((error: unknown) => {
+    const audio = getAudio(this.queue[index], controller.signal, this.previewVoice).catch((error: unknown) => {
       if (this.requests.get(index)?.controller === controller) {
         this.requests.delete(index);
       }
@@ -375,7 +380,7 @@ class Reading {
 
       this.url = URL.createObjectURL(blob);
       this.audio.src = this.url;
-      this.audio.playbackRate = speed;
+      this.audio.playbackRate = this.audio.defaultPlaybackRate;
       this.audio.onloadedmetadata = () => {
         this.ready = true;
         this.audio.currentTime = this.audio.duration * this.fraction;
@@ -394,6 +399,12 @@ class Reading {
       };
 
       this.audio.onended = () => {
+        if (this.previewVoice) {
+          stop();
+
+          return;
+        }
+
         if (this.paused && this.fraction === 1) {
           return;
         }
@@ -438,4 +449,17 @@ export function read(label: string, load: (signal: AbortSignal) => Promise<strin
   current = new Reading(label);
 
   return current.start(load);
+}
+
+export function playSample(voice: string) {
+  stop();
+  current = new Reading(previewLabel, voice);
+
+  return current.start(async () => [sampleText]);
+}
+
+export function stopSample() {
+  if (state?.label === previewLabel) {
+    stop();
+  }
 }

@@ -4,7 +4,8 @@ description: Configure Thread Reader narration or explain how to listen to a BB 
 ---
 
 In Settings → Installed plugins → Thread Reader, enter an OpenAI project key in
-the secret field. Set the Realtime model, voice, and narration style there.
+the secret field. Enter the Realtime model ID and voice name there. The OpenAI Realtime documentation link is below the settings.
+Click the speaker beside Voice to preview the selected voice, or click again to stop.
 The next passage uses the saved settings. Never request the key in chat.
 
 Use Read aloud on a message or selection, or Read thread aloud in the thread

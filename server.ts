@@ -1,21 +1,19 @@
 import type { BbPluginApi } from "@get-bb/plugin-sdk";
 import { synthesize } from "./realtime.ts";
-import { passageLimit } from "./speech.ts";
+import { defaultModel, defaultVoice, passageLimit, sampleText } from "./speech.ts";
 
 export default function threadReader(bb: BbPluginApi) {
   const settings = bb.settings.define({
     apiKey: { type: "string", label: "OpenAI API key", secret: true },
     model: {
-      type: "select",
+      type: "string",
       label: "Realtime model",
-      options: ["gpt-realtime-2.1-mini", "gpt-realtime-2.1"],
-      default: "gpt-realtime-2.1-mini",
+      default: defaultModel,
     },
     voice: {
-      type: "select",
+      type: "string",
       label: "Voice",
-      options: ["marin", "cedar", "coral", "ash", "sage", "verse"],
-      default: "marin",
+      default: defaultVoice,
     },
     style: {
       type: "string",
@@ -70,11 +68,25 @@ export default function threadReader(bb: BbPluginApi) {
         return context.text("Expected a JSON passage.", 400);
       }
 
-      if (!payload || typeof payload !== "object" || !("text" in payload) || typeof payload.text !== "string") {
+      if (!payload || typeof payload !== "object") {
         return context.text("Expected a text passage.", 400);
       }
 
-      const text = payload.text;
+      let voice: string | undefined;
+      let text: string;
+
+      if ("previewVoice" in payload) {
+        if (typeof payload.previewVoice !== "string" || !payload.previewVoice.trim()) {
+          return context.text("Enter a voice name to preview.", 400);
+        }
+
+        voice = payload.previewVoice.trim();
+        text = sampleText;
+      } else if ("text" in payload && typeof payload.text === "string") {
+        text = payload.text;
+      } else {
+        return context.text("Expected a text passage.", 400);
+      }
 
       if (!text.trim() || text.length > passageLimit) {
         return context.text("Choose a shorter, nonempty passage.", 400);
@@ -94,7 +106,16 @@ export default function threadReader(bb: BbPluginApi) {
 
       try {
         const signal = AbortSignal.any([context.req.raw.signal, lifetime.signal]);
-        const pcm = await synthesize(text, { ...config, apiKey: config.apiKey }, signal);
+        const pcm = await synthesize(
+          text,
+          {
+            ...config,
+            model: config.model.trim() || defaultModel,
+            voice: voice ?? (config.voice.trim() || defaultVoice),
+            apiKey: config.apiKey,
+          },
+          signal,
+        );
 
         return new Response(new Uint8Array(pcm), {
           headers: { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" },
