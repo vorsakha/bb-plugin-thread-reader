@@ -8,7 +8,7 @@ Install the plugin from this checkout with `bb plugin install .`. In **Settings 
 
 ## Playback
 
-Choose **Read thread aloud** in the thread menu for a snapshot of user and assistant messages in chronological order. Use **Read aloud** on a message or text selection for a shorter read. The player stays available while you navigate. **Stop** cancels playback, and starting another read replaces the current one.
+Choose **Read thread aloud** in the thread menu for a snapshot of human-authored messages and assistant replies in chronological order. Thread Reader loads the snapshot before playback and skips system and agent-injected user rows. Use **Read aloud** on a message or text selection for a shorter read. The player stays available while you navigate. **Stop** cancels playback, and starting another read replaces the current one.
 
 The BB server opens an authenticated WebSocket to OpenAI for each passage. The browser plays 24 kHz mono audio and prepares one passage ahead. OpenAI receives the text for narration and bills the configured API project. The key stays in BB's server-side secret setting. Realtime generates speech and can occasionally change wording.
 

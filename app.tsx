@@ -48,9 +48,10 @@ function Player() {
     return null;
   }
   const failed = player.status === "Error";
-  return <aside aria-label="Thread Reader" className="fixed bottom-4 right-4 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-lg border border-border bg-popover px-3 py-2 text-popover-foreground shadow-lg">
+  return <aside aria-label="Thread Reader" className="fixed bottom-4 right-4 z-50 box-border flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-lg border border-border bg-popover px-3 py-2 text-popover-foreground shadow-lg">
     <div role="status" className="min-w-0 text-sm">
       <strong>{failed ? "Couldn’t read aloud" : player.status + " · " + player.label}</strong>
+      {player.progress && <div className="text-xs opacity-85">{player.progress}</div>}
       {player.detail && <div className="max-w-64 text-xs">{player.detail}</div>}
     </div>
     <button type="button" onClick={stop} className="rounded-md border border-border px-2 py-1 text-sm hover:bg-accent">{failed ? "Dismiss" : "Stop"}</button>

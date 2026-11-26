@@ -4,6 +4,7 @@ export type ReaderState = {
   label: string;
   status: "Loading" | "Reading" | "Error";
   detail?: string;
+  progress?: string;
 };
 
 let state: ReaderState | null = null;
@@ -35,8 +36,8 @@ export function stop() {
 async function getAudio(text: string, context: AudioContext, signal: AbortSignal) {
   const response = await fetch("/api/v1/plugins/thread-reader/http/read", {
     method: "POST",
-    headers: { "Content-Type": "application/octet-stream" },
-    body: new TextEncoder().encode(text),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
     signal
   });
   if (!response.ok) {
@@ -101,15 +102,24 @@ export async function read(label: string, load: (signal: AbortSignal) => Promise
     signal.throwIfAborted();
     let buffer = await getAudio(queue[0], context, signal);
     for (let i = 0; i < queue.length; i++) {
-      publish({ label, status: "Reading" });
+      signal.throwIfAborted();
+      publish({ label, status: "Reading", progress: queue.length > 1 ? `Passage ${i + 1} of ${queue.length}` : undefined });
       const playing = play(context, buffer, signal);
       const next = queue[i + 1];
       if (!next) {
         await playing;
         break;
       }
-      const [, following] = await Promise.all([playing, getAudio(next, context, signal)]);
-      buffer = following;
+      const following = getAudio(next, context, signal).then(
+        audio => ({ ok: true as const, audio }),
+        (error: unknown) => ({ ok: false as const, error })
+      );
+      await playing;
+      const result = await following;
+      if (!result.ok) {
+        throw result.error;
+      }
+      buffer = result.audio;
     }
     if (current === controller) {
       stop();

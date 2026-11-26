@@ -10,7 +10,7 @@
     "name": "Thread Reader",
     "description": "Listen to BB messages and threads with expressive OpenAI Realtime narration.",
     "branding": {
-      "icon": "Volume2"
+      "icon": "./assets/speaker.svg"
     },
     "server": "./server.ts",
     "app": "./app.tsx",

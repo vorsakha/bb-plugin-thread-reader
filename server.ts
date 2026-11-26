@@ -14,9 +14,6 @@ export default function threadReader(bb: BbPluginApi) {
   let active = 0;
 
   bb.http.route("POST", "/read", async context => {
-    if (context.req.header("content-type") !== "application/octet-stream") {
-      return context.text("Unsupported narration request.", 415);
-    }
     const reader = context.req.raw.body?.getReader();
     if (!reader) {
       return context.text("Choose text to read.", 400);
@@ -30,7 +27,7 @@ export default function threadReader(bb: BbPluginApi) {
           break;
         }
         size += part.value.length;
-        if (size > passageLimit * 4) {
+        if (size > passageLimit * 6 + 64) {
           return context.text("Passage is too long.", 413);
         }
         frames.push(part.value);
@@ -39,7 +36,16 @@ export default function threadReader(bb: BbPluginApi) {
       await reader.cancel().catch(() => {});
       reader.releaseLock();
     }
-    const text = Buffer.concat(frames).toString("utf8");
+    let payload: unknown;
+    try {
+      payload = JSON.parse(Buffer.concat(frames).toString("utf8"));
+    } catch {
+      return context.text("Expected a JSON passage.", 400);
+    }
+    if (!payload || typeof payload !== "object" || !("text" in payload) || typeof payload.text !== "string") {
+      return context.text("Expected a text passage.", 400);
+    }
+    const text = payload.text;
     if (!text.trim() || text.length > passageLimit) {
       return context.text("Choose a shorter, nonempty passage.", 400);
     }
