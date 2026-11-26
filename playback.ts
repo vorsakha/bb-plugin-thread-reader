@@ -110,11 +110,16 @@ export async function read(label: string, load: (signal: AbortSignal) => Promise
         await playing;
         break;
       }
+      let pending = true;
       const following = getAudio(next, context, signal).then(
         audio => ({ ok: true as const, audio }),
         (error: unknown) => ({ ok: false as const, error })
-      );
+      ).finally(() => { pending = false; });
       await playing;
+      signal.throwIfAborted();
+      if (pending) {
+        publish({ label, status: "Loading", progress: `Passage ${i + 2} of ${queue.length}` });
+      }
       const result = await following;
       if (!result.ok) {
         throw result.error;

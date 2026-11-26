@@ -60,16 +60,16 @@ function Player() {
 
 export default definePluginApp(app => {
   app.slots.messageAction({
-    id: "read-message", title: "Read aloud", icon: "Volume2",
+    id: "read-message", title: "Read aloud", icon: "thread-reader/speaker",
     run: ({ message, selectedText }) => {
       const selected = selectedText?.trim();
       return read(selected ? "Selection" : "Message", async () => [selected || message.text]);
     }
   });
   app.slots.experimental_threadAction({
-    id: "read-thread", title: "Read thread aloud", group: "thread-reader", icon: "Volume2",
+    id: "read-thread", title: "Read thread aloud", group: "thread-reader", icon: "thread-reader/speaker",
     item: ({ thread, sdk }) => ({
-      label: "Read thread aloud", icon: "Volume2",
+      label: "Read thread aloud", icon: "thread-reader/speaker",
       run: () => read("Thread", signal => threadMessages(sdk, thread.id, signal))
     })
   });
