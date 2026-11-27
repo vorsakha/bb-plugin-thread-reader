@@ -1,7 +1,34 @@
 import { playSample, previewLabel, snapshot, stopSample, subscribe } from "./playback.ts";
-import { defaultVoice } from "./speech.ts";
+import { defaultKokoroVoice, defaultVoice } from "./speech.ts";
 
-export function mountVoicePreview() {
+export function mountNarrationSettings(local: boolean) {
+  const label = local ? "Kokoro voice" : "OpenAI voice";
+  const fallback = local ? defaultKokoroVoice : defaultVoice;
+  const detail = document.querySelector<HTMLElement>('[data-testid="plugin-detail-thread-reader"]');
+
+  if (!detail) {
+    return;
+  }
+
+  detail.dataset.threadReaderProvider = local ? "kokoro" : "openai";
+
+  const playbackHeading = document.createElement("h3");
+  playbackHeading.className = "thread-reader-playback-heading";
+  playbackHeading.textContent = "Playback";
+
+  const hint = document.createElement("p");
+  hint.className = "text-xs text-muted-foreground";
+  hint.textContent = local ? "Speech stays on your BB server." : "Text is sent to your OpenAI project for narration.";
+
+  const guide = document.createElement("a");
+  guide.className = "text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground";
+  guide.textContent = local ? "Browse Kokoro voices" : "OpenAI Realtime guide";
+  guide.href = local
+    ? "https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md"
+    : "https://developers.openai.com/api/docs/guides/realtime-conversations";
+  guide.target = "_blank";
+  guide.rel = "noopener noreferrer";
+
   let field: HTMLInputElement | null = null;
   let voice = "";
   const button = document.createElement("button");
@@ -20,7 +47,8 @@ export function mountVoicePreview() {
   icon.setAttribute("stroke-linejoin", "round");
   const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
   icon.append(path);
-  button.append(icon);
+  const caption = document.createElement("span");
+  button.append(icon, caption);
 
   const feedback = document.createElement("span");
   feedback.className = "thread-reader-preview-feedback";
@@ -35,6 +63,12 @@ export function mountVoicePreview() {
     const preview = state?.label === previewLabel ? state : null;
     const playing = preview !== null && preview.status !== "Error";
     const label = playing ? "Stop voice preview" : `Preview ${voice} voice`;
+    const action = playing ? "Stop" : "Preview";
+
+    if (caption.textContent !== action) {
+      caption.textContent = action;
+    }
+
     button.title = label;
     button.setAttribute("aria-label", label);
     button.disabled = !voice;
@@ -58,7 +92,7 @@ export function mountVoicePreview() {
   };
 
   function syncVoice() {
-    const value = field?.value.trim() || defaultVoice;
+    const value = field?.value.trim() || fallback;
 
     if (value !== voice) {
       stopSample();
@@ -68,10 +102,23 @@ export function mountVoicePreview() {
   }
 
   function syncFields() {
-    const detail = location.pathname.startsWith("/settings/")
-      ? document.querySelector('[data-testid="plugin-detail-thread-reader"]')
-      : null;
-    const next = detail?.querySelector<HTMLInputElement>('input[aria-label="Voice"]') ?? null;
+    const providerLabel = detail?.querySelector('[data-settings-anchor="Narration provider"] p');
+    const playbackRow = detail?.querySelector('[data-settings-anchor="Show playback window"]');
+    const voiceRow = detail?.querySelector(`[data-settings-anchor="${label}"]`);
+    const voiceLabel = voiceRow?.querySelector("p");
+    const next = voiceRow?.querySelector("input") ?? null;
+
+    if (providerLabel && providerLabel.nextElementSibling !== hint) {
+      providerLabel.after(hint);
+    }
+
+    if (voiceLabel && voiceLabel.nextElementSibling !== guide) {
+      voiceLabel.after(guide);
+    }
+
+    if (playbackRow && playbackRow.firstElementChild !== playbackHeading) {
+      playbackRow.prepend(playbackHeading);
+    }
 
     if (next !== field) {
       field?.removeEventListener("input", syncVoice);
@@ -93,12 +140,16 @@ export function mountVoicePreview() {
   }
 
   const observer = new MutationObserver(syncFields);
-  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["value"] });
+  observer.observe(detail, { childList: true, subtree: true, attributes: true, attributeFilter: ["value"] });
   const unsubscribe = subscribe(render);
   syncFields();
 
   return () => {
     observer.disconnect();
+    delete detail.dataset.threadReaderProvider;
+    hint.remove();
+    guide.remove();
+    playbackHeading.remove();
     unsubscribe();
     field?.removeEventListener("input", syncVoice);
     stopSample();

@@ -6,13 +6,28 @@ Listen to a BB thread, a single message, or text you select. The player lets you
 
 ## Install
 
-You need BB 0.50 or later and an OpenAI API key with Realtime access.
+You need BB 0.50 or later.
 
 ```sh
-bb plugin install git:https://github.com/vorsakha/bb-plugin-thread-reader.git@v0.1.6
+bb plugin install git:https://github.com/vorsakha/bb-plugin-thread-reader.git@v0.1.7
 ```
 
-Open **Settings → Installed plugins → Thread Reader** and enter your API key. Click the speaker beside **Voice** to hear a sample. The defaults are `gpt-realtime-2.1-mini` and the `marin` voice. To change the delivery, edit **Narration style** and preview it again.
+## Choose a narration provider
+
+In **Settings → Installed plugins → Thread Reader**, choose a **Narration provider**. Click **Preview** beside the selected provider’s voice to hear a sample.
+
+**OpenAI Realtime** is the default. Enter an OpenAI API key with Realtime access. The defaults are `gpt-realtime-2.1-mini` and the `marin` voice. Edit **Narration style** to change the delivery.
+
+**Local Kokoro 82M** runs on the BB server’s CPU and works without an API key. Start Kokoro-FastAPI on the machine running BB:
+
+```sh
+docker run -d --name thread-reader-kokoro --restart unless-stopped \
+  -p 127.0.0.1:8880:8880 --cpus=4 --memory=3g \
+  -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 -e CORS_ENABLED=false \
+  ghcr.io/remsky/kokoro-fastapi-cpu:v0.10.0
+```
+
+Select **Local Kokoro 82M** and preview the default English voice, `af_heart`. Enter another voice ID in **Kokoro voice** to change the voice and language. [Kokoro voice list](https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md)
 
 ## Read aloud
 
@@ -28,8 +43,8 @@ Drag the player by its title to move it. With the title focused, use the arrow k
 
 **Show playback window** is on by default in Thread Reader settings. Turn it off to hide the player while narration continues. Turn it back on during a read to see the controls again.
 
-To dismiss the player after the last passage, turn on **Close player when narration finishes** in Thread Reader settings. By default, the player stays open for replay.
+To dismiss the player after the last passage, turn on **Close window when finished** in Thread Reader settings. By default, the player stays open for replay.
 
 ## Privacy and cost
 
-Your API key stays on the BB server. Thread Reader sends text to OpenAI one passage at a time and prepares one passage ahead. OpenAI bills your API project for narration and voice previews.
+Thread Reader prepares one passage ahead. With local Kokoro, the BB server sends narration and previews to its loopback speech service. With OpenAI Realtime, the BB server sends passages to OpenAI and keeps your API key server-side. OpenAI bills your API project for narration and voice previews.

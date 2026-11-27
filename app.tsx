@@ -20,7 +20,7 @@ import {
 } from "./playback.ts";
 import { MoveHandle, type PlayerPosition } from "./player-position.tsx";
 import { MessagePlayback } from "./message-playback.tsx";
-import { mountVoicePreview } from "./voice-preview.ts";
+import { mountNarrationSettings } from "./narration-settings.ts";
 
 async function threadMessages(sdk: ReturnType<typeof useSdk>, threadId: string, signal: AbortSignal) {
   const messages = new Map<number, string>();
@@ -325,22 +325,20 @@ function Player() {
   );
 }
 
-export default definePluginApp((app) => {
-  app.slots.settingsSection({
-    id: "documentation",
-    component: () => (
-      <a
-        href="https://developers.openai.com/api/docs/guides/realtime-conversations"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-muted-foreground underline hover:text-foreground"
-      >
-        OpenAI Realtime documentation
-      </a>
-    ),
-  });
+function NarrationSettings() {
+  const provider = useSettings().values?.provider;
 
-  app.contentScripts.register({ id: "voice-preview", mount: mountVoicePreview });
+  useEffect(() => {
+    if (typeof provider === "string") {
+      return mountNarrationSettings(provider === "kokoro");
+    }
+  }, [provider]);
+
+  return null;
+}
+
+export default definePluginApp((app) => {
+  app.slots.settingsSection({ id: "documentation", component: NarrationSettings });
 
   app.slots.experimental_messageMetadata({ id: "playback", placement: "actionRow", component: MessagePlayback });
 

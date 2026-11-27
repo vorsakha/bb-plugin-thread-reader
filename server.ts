@@ -1,9 +1,22 @@
 import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import { synthesizeKokoro } from "./kokoro.ts";
 import { synthesize } from "./realtime.ts";
-import { defaultModel, defaultVoice, passageLimit, sampleText } from "./speech.ts";
+import { defaultKokoroVoice, defaultModel, defaultVoice, passageLimit, sampleText } from "./speech.ts";
 
 export default function threadReader(bb: BbPluginApi) {
   const settings = bb.settings.define({
+    provider: {
+      type: "select",
+      label: "Narration provider",
+      options: ["openai", "kokoro"],
+      experimental_optionLabels: { openai: "OpenAI Realtime", kokoro: "Local Kokoro 82M" },
+      default: "openai",
+    },
+    kokoroVoice: {
+      type: "string",
+      label: "Kokoro voice",
+      default: defaultKokoroVoice,
+    },
     apiKey: { type: "string", label: "OpenAI API key", secret: true },
     model: {
       type: "string",
@@ -12,12 +25,13 @@ export default function threadReader(bb: BbPluginApi) {
     },
     voice: {
       type: "string",
-      label: "Voice",
+      label: "OpenAI voice",
       default: defaultVoice,
     },
     style: {
       type: "string",
       label: "Narration style",
+      experimental_multiline: true,
       default: "Warm and conversational. Use natural pauses and place emphasis on the main thought.",
     },
     showPlayer: {
@@ -27,7 +41,7 @@ export default function threadReader(bb: BbPluginApi) {
     },
     closeWhenFinished: {
       type: "boolean",
-      label: "Close player when narration finishes",
+      label: "Close window when finished",
       default: false,
     },
   });
@@ -104,10 +118,6 @@ export default function threadReader(bb: BbPluginApi) {
 
       const config = await settings.get();
 
-      if (!config.apiKey) {
-        return context.text("Add an OpenAI API key in Settings → Installed plugins → Thread Reader.", 409);
-      }
-
       if (active >= 4) {
         return context.text("Thread Reader is busy. Try again shortly.", 429);
       }
@@ -116,16 +126,26 @@ export default function threadReader(bb: BbPluginApi) {
 
       try {
         const signal = AbortSignal.any([context.req.raw.signal, lifetime.signal]);
-        const pcm = await synthesize(
-          text,
-          {
-            ...config,
-            model: config.model.trim() || defaultModel,
-            voice: voice ?? (config.voice.trim() || defaultVoice),
-            apiKey: config.apiKey,
-          },
-          signal,
-        );
+        let pcm: Buffer;
+
+        if (config.provider === "kokoro") {
+          pcm = await synthesizeKokoro(text, voice ?? (config.kokoroVoice.trim() || defaultKokoroVoice), signal);
+        } else {
+          if (!config.apiKey) {
+            return context.text("Add an OpenAI API key or select Local Kokoro 82M in Thread Reader settings.", 409);
+          }
+
+          pcm = await synthesize(
+            text,
+            {
+              model: config.model.trim() || defaultModel,
+              voice: voice ?? (config.voice.trim() || defaultVoice),
+              style: config.style,
+              apiKey: config.apiKey,
+            },
+            signal,
+          );
+        }
 
         return new Response(new Uint8Array(pcm), {
           headers: { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" },
