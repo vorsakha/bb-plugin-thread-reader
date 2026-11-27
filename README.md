@@ -14,11 +14,15 @@ bb plugin install git:https://github.com/vorsakha/bb-plugin-thread-reader.git@v0
 
 ## Choose a narration provider
 
-In **Settings → Installed plugins → Thread Reader**, choose a **Narration provider**. Click **Preview** beside the selected provider’s voice to hear a sample.
+Open **Settings → Installed plugins → Thread Reader**. Under **Narration provider**, select the service you want to use. The voice and connection settings change with your selection.
 
-**OpenAI Realtime** is the default. Enter an OpenAI API key with Realtime access. The defaults are `gpt-realtime-2.1-mini` and the `marin` voice. Edit **Narration style** to change the delivery.
+### OpenAI Realtime
 
-**Local Kokoro 82M** runs on the BB server’s CPU and works without an API key. Start Kokoro-FastAPI on the machine running BB:
+OpenAI Realtime is the default. Enter your project key in **OpenAI API key**, then click **Preview** beside **OpenAI voice**. The default model is `gpt-realtime-2.1-mini` and the default voice is `marin`. Use **Narration style** for directions such as “Pause between paragraphs.”
+
+### Local Kokoro 82M
+
+Kokoro runs on the BB server’s CPU and works without an API key. The plugin connects to a separate Kokoro-FastAPI service. If you use BB from another device, run the following command on the machine hosting BB.
 
 ```sh
 docker run -d --name thread-reader-kokoro --restart unless-stopped \
