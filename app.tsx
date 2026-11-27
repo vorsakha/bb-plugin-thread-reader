@@ -2,6 +2,8 @@ import "./player.css";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { definePluginApp, useBbContext, useSettings, type useSdk } from "@get-bb/plugin-sdk/app";
 import {
+  actionPhase,
+  actionSnapshot,
   holdForSeek,
   playbackSpeed,
   previewLabel,
@@ -17,6 +19,7 @@ import {
   type Transport,
 } from "./playback.ts";
 import { MoveHandle, usePlayerPosition } from "./player-position.tsx";
+import { MessagePlayback } from "./message-playback.tsx";
 import { mountVoicePreview } from "./voice-preview.ts";
 
 async function threadMessages(sdk: ReturnType<typeof useSdk>, threadId: string, signal: AbortSignal) {
@@ -206,11 +209,12 @@ function ThreadPlayer({ threadId }: { threadId: string }) {
 }
 
 function Player({ floating = false }: { floating?: boolean }) {
+  const showPlayer = useSettings().values?.showPlayer !== false;
   const player = useSyncExternalStore(subscribe, snapshot);
   const speed = useSyncExternalStore(subscribe, playbackSpeed);
   const position = usePlayerPosition();
 
-  if (!player || player.label === previewLabel) {
+  if (!showPlayer || !player || player.label === previewLabel) {
     return null;
   }
 
@@ -342,6 +346,8 @@ export default definePluginApp((app) => {
 
   app.contentScripts.register({ id: "voice-preview", mount: mountVoicePreview });
 
+  app.slots.experimental_messageMetadata({ id: "playback", placement: "actionRow", component: MessagePlayback });
+
   app.slots.messageAction({
     id: "read-message",
     title: "Read aloud",
@@ -349,7 +355,15 @@ export default definePluginApp((app) => {
     run: ({ message, selectedText }) => {
       const selected = selectedText?.trim();
 
-      return read(selected ? "Selection" : "Message", async () => [selected || message.text]);
+      if (!selected && actionPhase(actionSnapshot(), message.threadId, message.id)) {
+        stop();
+
+        return;
+      }
+
+      const target = { threadId: message.threadId, messageId: message.id };
+
+      return read(selected ? "Selection" : "Message", target, async () => [selected || message.text]);
     },
   });
 
@@ -358,11 +372,24 @@ export default definePluginApp((app) => {
     title: "Read thread aloud",
     group: "thread-reader",
     icon: "thread-reader/speaker",
-    item: ({ thread, sdk }) => ({
-      label: "Read thread aloud",
-      icon: "thread-reader/speaker",
-      run: () => read("Thread", (signal) => threadMessages(sdk, thread.id, signal)),
-    }),
+    useData: () => useSyncExternalStore(subscribe, actionSnapshot),
+    item: ({ thread, sdk, data }) => {
+      const phase = actionPhase(data, thread.id);
+
+      if (phase === "loading") {
+        return { label: "Cancel loading narration", icon: "thread-reader/loading", run: stop };
+      }
+
+      if (phase === "stop") {
+        return { label: "Stop narration", icon: "thread-reader/stop", run: stop };
+      }
+
+      return {
+        label: "Read thread aloud",
+        icon: "thread-reader/speaker",
+        run: () => read("Thread", { threadId: thread.id }, (signal) => threadMessages(sdk, thread.id, signal)),
+      };
+    },
   });
 
   app.slots.experimental_threadHeaderRow({ id: "reader", component: ThreadPlayer });

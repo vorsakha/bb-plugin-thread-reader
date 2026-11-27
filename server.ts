@@ -20,6 +20,11 @@ export default function threadReader(bb: BbPluginApi) {
       label: "Narration style",
       default: "Warm and conversational. Use natural pauses and place emphasis on the main thought.",
     },
+    showPlayer: {
+      type: "boolean",
+      label: "Show playback window",
+      default: true,
+    },
     closeWhenFinished: {
       type: "boolean",
       label: "Close player when narration finishes",

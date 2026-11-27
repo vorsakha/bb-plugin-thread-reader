@@ -1,6 +1,6 @@
 {
   "name": "bb-plugin-thread-reader",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -13,7 +13,9 @@
     "branding": {
       "icon": "./assets/speaker.svg",
       "experimental_icons": {
-        "speaker": "./assets/speaker.svg"
+        "speaker": "./assets/speaker.svg",
+        "loading": "./assets/loading.svg",
+        "stop": "./assets/stop.svg"
       }
     },
     "server": "./server.ts",

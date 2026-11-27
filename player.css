@@ -97,12 +97,52 @@ button.thread-reader-handle:active {
   color: var(--accent-foreground);
 }
 
-.thread-reader-control:focus-visible {
+.thread-reader-control:focus-visible,
+.thread-reader-message-action:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 1px;
 }
 
-.thread-reader-spinner {
+.thread-reader-message-action {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  color: var(--muted-foreground);
+}
+
+.thread-reader-message-action:hover,
+.thread-reader-message-action:focus-visible {
+  color: var(--foreground);
+}
+
+.thread-reader-message-action + button:has([data-icon="thread-reader/speaker"]) {
+  position: absolute;
+  visibility: hidden;
+}
+
+@media (max-width: 48rem) and (pointer: coarse) {
+  .thread-reader-message-action {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
+
+.thread-reader-message-action::before {
+  content: "";
+}
+
+.thread-reader-message-action[data-phase="stop"]::before {
+  width: 9px;
+  height: 9px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.thread-reader-spinner,
+.thread-reader-message-action[data-phase="loading"]::before {
   width: 12px;
   height: 12px;
   flex: none;
@@ -113,7 +153,9 @@ button.thread-reader-handle:active {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .thread-reader-spinner {
+  .thread-reader-spinner,
+  .thread-reader-message-action[data-phase="loading"]::before,
+  [data-icon="thread-reader/loading"] {
     animation: thread-reader-spin 0.85s linear infinite;
   }
 }
@@ -182,11 +224,17 @@ button.thread-reader-handle:active {
     --muted-foreground: ButtonText;
   }
 
-  .thread-reader-spinner {
+  .thread-reader-spinner,
+  .thread-reader-message-action[data-phase="loading"]::before {
     forced-color-adjust: none;
     border-color: Canvas;
     border-top-color: CanvasText;
     border-right-color: CanvasText;
+  }
+
+  .thread-reader-message-action[data-phase="stop"]::before {
+    forced-color-adjust: none;
+    background: ButtonText;
   }
 
   .thread-reader-timeline {

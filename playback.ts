@@ -2,6 +2,9 @@ import { passages, sampleText } from "./speech.ts";
 
 export const previewLabel = "Voice preview";
 
+type ReadTarget = { threadId: string; messageId?: string };
+type ReadAction = { target: ReadTarget; phase: "loading" | "stop" };
+
 export type Transport = {
   label: string;
   status: "Loading" | "Reading" | "Paused" | "Finished";
@@ -14,6 +17,7 @@ export type Transport = {
 type ReaderState = Transport | { label: string; status: "Error"; detail: string };
 
 let state: ReaderState | null = null;
+let action: ReadAction | null = null;
 let current: Reading | undefined;
 let closeWhenFinished = false;
 
@@ -66,6 +70,18 @@ export function snapshot() {
   return state;
 }
 
+export function actionSnapshot() {
+  return action;
+}
+
+export function actionPhase(action: ReadAction | null, threadId: string, messageId?: string) {
+  if (action?.target.threadId !== threadId || action.target.messageId !== messageId) {
+    return null;
+  }
+
+  return action.phase;
+}
+
 export function subscribe(listener: () => void) {
   listeners.add(listener);
 
@@ -76,6 +92,17 @@ export function subscribe(listener: () => void) {
 
 function publish(value: ReaderState | null) {
   state = value;
+  const target = current?.target;
+
+  if (!target || !value || value.status === "Error" || value.status === "Finished") {
+    action = null;
+  } else {
+    const phase = value.status === "Loading" ? "loading" : "stop";
+
+    if (action?.target !== target || action.phase !== phase) {
+      action = { target, phase };
+    }
+  }
 
   for (const listener of listeners) {
     listener();
@@ -151,6 +178,7 @@ class Reading {
 
   constructor(
     private readonly label: string,
+    readonly target?: ReadTarget,
     private readonly previewVoice?: string,
   ) {}
 
@@ -451,16 +479,16 @@ export function seek(position: number) {
   current?.seek(position);
 }
 
-export function read(label: string, load: (signal: AbortSignal) => Promise<string[]>) {
+export function read(label: string, target: ReadTarget, load: (signal: AbortSignal) => Promise<string[]>) {
   stop();
-  current = new Reading(label);
+  current = new Reading(label, target);
 
   return current.start(load);
 }
 
 export function playSample(voice: string) {
   stop();
-  current = new Reading(previewLabel, voice);
+  current = new Reading(previewLabel, undefined, voice);
 
   return current.start(async () => [sampleText]);
 }
