@@ -1,6 +1,6 @@
 import "./player.css";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { definePluginApp, useBbContext, useSettings, type useSdk } from "@get-bb/plugin-sdk/app";
+import { definePluginApp, useSettings, type useSdk } from "@get-bb/plugin-sdk/app";
 import {
   actionPhase,
   actionSnapshot,
@@ -18,7 +18,7 @@ import {
   togglePlayback,
   type Transport,
 } from "./playback.ts";
-import { MoveHandle, usePlayerPosition } from "./player-position.tsx";
+import { MoveHandle, type PlayerPosition } from "./player-position.tsx";
 import { MessagePlayback } from "./message-playback.tsx";
 import { mountVoicePreview } from "./voice-preview.ts";
 
@@ -199,40 +199,36 @@ function Overlay() {
     };
   }, []);
 
-  return <Player floating />;
+  return <Player />;
 }
 
-function ThreadPlayer({ threadId }: { threadId: string }) {
-  const active = useBbContext();
-
-  return active.threadId === threadId ? <Player /> : null;
-}
-
-function Player({ floating = false }: { floating?: boolean }) {
+function Player() {
   const showPlayer = useSettings().values?.showPlayer !== false;
   const player = useSyncExternalStore(subscribe, snapshot);
   const speed = useSyncExternalStore(subscribe, playbackSpeed);
-  const position = usePlayerPosition();
+  const [position, setPosition] = useState<PlayerPosition | null>(null);
 
   if (!showPlayer || !player || player.label === previewLabel) {
     return null;
   }
 
-  const panel = floating ? "thread-reader-panel thread-reader-floating" : "thread-reader-panel thread-reader-docked";
-
-  const moved = floating && position;
-  const style = moved
+  const style = position
     ? {
-        transform: `translate(clamp(0px, ${moved.x}px, 100dvw - 100%), clamp(0px, ${moved.y}px, 100dvh - 100%))`,
+        transform: `translate(clamp(0px, ${position.x}px, 100dvw - 100%), clamp(0px, ${position.y}px, 100dvh - 100%))`,
       }
     : undefined;
-  const panelProps = { className: panel, "data-moved": moved ? true : undefined, style, "aria-label": "Thread Reader" };
+  const panelProps = {
+    className: "thread-reader-panel",
+    "data-moved": position ? true : undefined,
+    style,
+    "aria-label": "Thread Reader",
+  };
 
   if (player.status === "Error") {
     return (
       <aside {...panelProps}>
         <div className="flex items-center gap-3 text-sm">
-          <MoveHandle placed={position !== null}>
+          <MoveHandle onMove={setPosition}>
             <div role="status" className="min-w-0 break-words">
               <strong>Couldn’t read aloud</strong>
               <div className="text-xs">{player.detail}</div>
@@ -283,7 +279,7 @@ function Player({ floating = false }: { floating?: boolean }) {
             )}
           </svg>
         </button>
-        <MoveHandle placed={position !== null}>
+        <MoveHandle onMove={setPosition}>
           <span role="status" className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-[13px]">
             <span className="font-medium">{player.label}</span>
             {loading ? (
@@ -392,6 +388,5 @@ export default definePluginApp((app) => {
     },
   });
 
-  app.slots.experimental_threadHeaderRow({ id: "reader", component: ThreadPlayer });
   app.slots.experimental_appOverlay({ id: "reader", component: Overlay });
 });

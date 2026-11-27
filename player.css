@@ -1,8 +1,11 @@
 .thread-reader-panel {
+  position: fixed;
+  z-index: 50;
+  top: 3.5rem;
+  right: 1rem;
   box-sizing: border-box;
   width: 18.5rem;
   max-width: calc(100% - 1.5rem);
-  margin: 6px 16px 6px auto;
   padding: 5px 10px;
   color: var(--popover-foreground);
   background: var(--popover);
@@ -11,51 +14,23 @@
   box-shadow: var(--shadow-sm);
 }
 
-body:has(.thread-reader-docked:not([inert] *)) .thread-reader-floating:not([data-moved]),
-body:has(.thread-reader-floating[data-moved]) .thread-reader-docked,
-[inert] .thread-reader-docked {
-  display: none;
-}
-
-.thread-reader-floating {
-  position: fixed;
-  z-index: 50;
-  top: 3.5rem;
-  right: 1rem;
-  margin: 0;
-}
-
-.thread-reader-floating[data-moved] {
+.thread-reader-panel[data-moved] {
   inset: 0 auto auto 0;
 }
 
-.thread-reader-title {
-  position: relative;
+.thread-reader-handle {
   display: flex;
-  align-items: center;
-  gap: 4px;
   flex: 1;
+  align-items: center;
   min-width: 0;
   min-height: 32px;
-}
-
-.thread-reader-grip {
-  flex: none;
-  width: 8px;
-  height: 12px;
-  background: radial-gradient(circle, var(--muted-foreground) 1px, transparent 1.2px) 0 0 / 4px 4px;
-}
-
-button.thread-reader-handle {
-  position: absolute;
-  inset: 0;
   border-radius: 4px;
   cursor: grab;
   touch-action: none;
   user-select: none;
 }
 
-button.thread-reader-handle:active {
+.thread-reader-handle:active {
   cursor: grabbing;
 }
 
@@ -97,6 +72,7 @@ button.thread-reader-handle:active {
   color: var(--accent-foreground);
 }
 
+.thread-reader-handle:focus-visible,
 .thread-reader-control:focus-visible,
 .thread-reader-message-action:focus-visible {
   outline: 2px solid var(--ring);
@@ -219,11 +195,6 @@ button.thread-reader-handle:active {
 }
 
 @media (forced-colors: active) {
-  .thread-reader-grip {
-    forced-color-adjust: none;
-    --muted-foreground: ButtonText;
-  }
-
   .thread-reader-spinner,
   .thread-reader-message-action[data-phase="loading"]::before {
     forced-color-adjust: none;
